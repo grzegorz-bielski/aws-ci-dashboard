@@ -1,3 +1,6 @@
-addSbtPlugin("io.github.davidgregory084" % "sbt-tpolecat" % "0.1.14")
+addSbtPlugin("io.github.davidgregory084" % "sbt-tpolecat" % "0.1.20")
 addSbtPlugin("io.spray" % "sbt-revolver" % "0.9.1")
-addSbtPlugin("com.eed3si9n" % "sbt-assembly" % "0.14.10")
+addSbtPlugin("org.portable-scala" % "sbt-scalajs-crossproject" % "1.0.0")
+addSbtPlugin("org.scala-js" % "sbt-scalajs" % "1.6.0")
+
+libraryDependencies += ("org.scala-js" %% "scalajs-env-jsdom-nodejs" % "1.1.0")

@@ -30,6 +30,11 @@ final class CodePipelineServiceImpl(console: Console.Service, codepipeline: Code
           .mapError(AwsError.fromThrowable(_))
       }
 
+  def getPipelineState(name: String): IO[AwsError, GetPipelineStateResponse] =
+    codepipeline
+      .getPipelineState(GetPipelineStateRequest(name))
+      .map(_.editable)
+
 object CodePipelineServiceImpl:
   lazy val layer: URLayer[Has[Console.Service] with Has[CodePipeline.Service], Has[CodePipelineService]] =
     (CodePipelineServiceImpl(_, _)).toLayer
