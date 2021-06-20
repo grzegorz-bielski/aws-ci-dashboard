@@ -1,6 +1,7 @@
 import org.scalajs.jsenv.jsdomnodejs.JSDOMNodeJSEnv
 
 val zioAwsVersion = "3.16.79.3"
+val circeVersion = "0.14.1"
 
 ThisBuild / scalaVersion := "3.0.0"
 ThisBuild / organization := "com.awscidashboard"
@@ -21,7 +22,10 @@ lazy val frontend =
     .settings(
       libraryDependencies ++= Seq(
         ("org.scala-js" %%% "scalajs-dom" % "1.1.0")
-          .cross(CrossVersion.for3Use2_13)
+          .cross(CrossVersion.for3Use2_13),
+        "com.raquo" %%% "laminar" % "0.13.0",
+        "io.circe" %%% "circe-core" % circeVersion,
+        "io.circe" %%% "circe-parser" % circeVersion
       ),
       jsEnv := new JSDOMNodeJSEnv(),
       scalaJSUseMainModuleInitializer := true,
