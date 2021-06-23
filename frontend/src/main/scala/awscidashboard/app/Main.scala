@@ -1,11 +1,6 @@
 package com.awscidashboard.app
 
 import org.scalajs.dom
-import org.scalajs.dom.document
-import org.scalajs.dom.experimental.Fetch.*
-import org.scalajs.dom.experimental.HttpMethod
-import scala.scalajs.js.annotation.JSExportTopLevel
-
 import scala.concurrent.Future
 
 import com.raquo.laminar.api.L.{*, given}
@@ -76,6 +71,9 @@ object Main:
   object HttpService:
     // standard JS event loop
     import scala.concurrent.ExecutionContext.Implicits.global
+
+    import org.scalajs.dom.experimental.Fetch.*
+    import org.scalajs.dom.experimental.HttpMethod
 
     def GET(endpoint: String) =
       val result =

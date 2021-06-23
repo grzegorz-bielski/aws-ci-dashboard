@@ -43,6 +43,9 @@ lazy val backend = project
       "io.github.vigoo" %% "zio-aws-codepipeline" % zioAwsVersion,
       "io.github.vigoo" %% "zio-aws-codebuild" % zioAwsVersion,
       "io.github.vigoo" %% "zio-aws-sts" % zioAwsVersion,
+      "io.circe" %% "circe-core" % circeVersion,
+      "io.circe" %% "circe-parser" % circeVersion,
+      "org.typelevel" %% "cats-core" % "2.6.1",
       "ch.qos.logback" % "logback-classic" % "1.2.3",
       "io.d11" %% "zhttp" % "1.0.0.0-RC17"
     )

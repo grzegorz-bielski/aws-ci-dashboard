@@ -7,28 +7,28 @@ import zhttp.service.Server
 import io.github.vigoo.zioaws.netty.{default as httpClient}
 import io.github.vigoo.zioaws.core.config.{AwsConfig, default as awsConfig}
 import io.github.vigoo.zioaws.codepipeline
+import io.circe.syntax.given
 
 object Main extends App:
-  // def run(args: List[String]) =
-  //   program
-  //     .provideCustomLayer(appLayer)
-  //     .exitCode
+  override def run(_args: List[String]) =
+    Server
+      .start(8090, app)
+      .provideCustomLayer(appLayer)
+      .exitCode
 
-  // lazy val program =
-  //   CodePipelineService.getPipelines()
+  lazy val appLayer =
+    val runtimeLayer = ZEnv.live
+    val awsLayer = httpClient >>> awsConfig >>> codepipeline.live
 
-  // lazy val appLayer =
-  //   val runtimeLayer = ZEnv.live
-  //   val awsLayer = httpClient >>> awsConfig >>> codepipeline.live
+    (runtimeLayer ++ awsLayer) >>> CodePipelineServiceImpl.layer
 
-  //   (runtimeLayer ++ awsLayer) >>> CodePipelineServiceImpl.layer
+  lazy val app = HttpApp
+    .collectM {
+      case Method.GET -> Root / "pipelines" =>
+        CodePipelineService
+          .getPipelines()
+          .map(p => Response.jsonString(p.asJson.toString))
+          .orElseSucceed(Response.jsonString("""{"error": "500"}"""))
 
-  // Create HTTP route
-  val app: HttpApp[Any, Nothing] = HttpApp.collect {
-    case Method.GET -> Root / "text" => Response.text("Hello World!")
-    case Method.GET -> Root / "json" => Response.jsonString("""{"greetings": "Hello World!"}""")
-  }
-
-  // Run it like any simple app
-  override def run(args: List[String]): URIO[zio.ZEnv, ExitCode] =
-    Server.start(8090, app.silent).exitCode
+      case _ => ZIO.succeed(Response.jsonString("""{"error": "404"}"""))
+    }
