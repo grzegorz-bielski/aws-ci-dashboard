@@ -26,7 +26,7 @@ object Main extends App:
     .collectM {
       case Method.GET -> Root / "pipelines" =>
         CodePipelineService
-          .getPipelines()
+          .getPipelinesDetails()
           .map(p => Response.jsonString(p.asJson.toString))
           .orElseSucceed(Response.jsonString("""{"error": "500"}"""))
 
