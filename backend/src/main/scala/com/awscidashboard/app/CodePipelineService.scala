@@ -7,8 +7,12 @@ import zio.*
 import io.github.vigoo.zioaws.core.AwsError
 import io.github.vigoo.zioaws.codepipeline.CodePipeline
 import io.github.vigoo.zioaws.codepipeline.model.*
-import io.circe.Codec
+import io.circe.syntax.given
+import io.circe.Decoder
+import io.circe.parser.parse
 import cats.syntax.functorFilter.given
+
+import CodePipelineModels.*
 
 trait CodePipelineService:
   def getPipelinesDetails(): IO[AwsError, Vector[PipelineDetailsModel]]
@@ -29,18 +33,15 @@ final class CodePipelineServiceImpl(console: Console.Service, codepipeline: Code
 
   private def getPipelineDetails(pipelineName: String) =
     for
-      stages <- getPipelineStages(pipelineName)
-      execId <- getLatestPipelineExecutionId(pipelineName)
-      revision <- execId.map(getLatestRevision(pipelineName, _)) getOrElse ZIO.succeed(None)
+      state <- getPipelineState(pipelineName)
+      latestExecution <- getLatestPipelineExecution(pipelineName)
     yield PipelineDetailsModel(
       name = pipelineName,
-      revision = revision,
-      stages = stages.map { s =>
-        PipelineStageModel(
-          s.stageName,
-          s.latestExecution.map(e => StageExecutionModel(e.pipelineExecutionId, e.status.toString))
-        )
-      }
+      version = state.pipelineVersion,
+      revision = None,
+      created = state.created,
+      updated = state.updated,
+      latestExecution = latestExecution
     )
 
   private def getPipelines(): IO[AwsError, Vector[PipelineSummary]] =
@@ -55,46 +56,47 @@ final class CodePipelineServiceImpl(console: Console.Service, codepipeline: Code
           .mapError(AwsError.fromThrowable(_))
       }
 
-  private def getPipelineStages(name: String) =
+  private def getPipelineState(name: String) =
     codepipeline
       .getPipelineState(GetPipelineStateRequest(name))
-      .map {
-        _.editable.stageStates.map(_.toVector) getOrElse Vector.empty
-      }
+      .map(_.editable)
 
-  private def getLatestPipelineExecutionId(pipelineName: String) =
+  private def getPipelineStages(state: GetPipelineStateResponse) =
+    state.stageStates.map(_.toVector) getOrElse Vector.empty
+
+  private def getLatestPipelineExecution(pipelineName: String): IO[AwsError, Option[PipelineExecutionModel]] =
     codepipeline
       .listPipelineExecutions(ListPipelineExecutionsRequest(pipelineName, maxResults = Some(1)))
       .run(Sink.head)
       .map(_.flatMap(_.editable.pipelineExecutionId))
+      .flatMap(_.map(getPipelineExecution(pipelineName, _)).getOrElse(ZIO.succeed(None))) //todo: use traverse
 
-  private def getLatestRevision(pipelineName: String, execId: String) =
+  private def getPipelineExecution(pipelineName: String, executionId: String) =
     codepipeline
-      .getPipelineExecution(
-        GetPipelineExecutionRequest(pipelineName, execId)
-      )
-      .map(
-        _.editable.pipelineExecution
-          .flatMap(_.artifactRevisions)
-          .flatMap(_.headOption)
-          .flatMap(_.revisionSummary)
-      )
-
+      .getPipelineExecution(GetPipelineExecutionRequest(pipelineName, executionId))
+      .map(_.editable.pipelineExecution)
+      .map {
+        _.flatMap { exec =>
+          println(exec)
+          // todo: use par tuple from cats
+          for
+            id <- exec.pipelineExecutionId
+            name <- exec.pipelineName
+            version <- exec.pipelineVersion
+            status <- exec.status
+            latestRevision <- exec.artifactRevisions
+              .flatMap(_.headOption)
+              .flatMap(
+                _.revisionSummary.flatMap(
+                  parse(_).flatMap(_.as[RevisionSummaryModel]).toOption
+                )
+              )
+          yield PipelineExecutionModel(id, name, version, status, latestRevision)
+        }
+      }
 object CodePipelineServiceImpl:
   lazy val layer: URLayer[Has[Console.Service] with Has[CodePipeline.Service], Has[CodePipelineService]] =
     (CodePipelineServiceImpl(_, _)).toLayer
-case class PipelineDetailsModel(
-    name: String,
-    revision: Option[String],
-    stages: Vector[PipelineStageModel]
-) derives Codec.AsObject
 
-case class PipelineStageModel(
-    name: Option[String],
-    latestExecution: Option[StageExecutionModel]
-) derives Codec.AsObject
-
-case class StageExecutionModel(
-    executionId: String,
-    status: String // todo: refine
-) derives Codec.AsObject
+// extension [R, E, T](op: Option[ZIO[R, E, Option[T]]])
+//   def toZIO: ZIO[R, E, Option[T]] = op.getOrElse(ZIO.succeed(Option.empty[T]))
