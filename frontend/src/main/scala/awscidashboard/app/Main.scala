@@ -1,12 +1,15 @@
 package com.awscidashboard.app
 
 import org.scalajs.dom
+import scala.scalajs.js.annotation.*
 
 import com.raquo.laminar.api.L.{*, given}
 
 import com.awscidashboard.models.CodePipelineModels.*
 
 object Main:
+  // @JSExportTopLevel(name = "xd", moduleID = "XD")
+  // def xd(): Unit = println("Halko")
 
   def main(args: Array[String]): Unit =
     // println("halko")

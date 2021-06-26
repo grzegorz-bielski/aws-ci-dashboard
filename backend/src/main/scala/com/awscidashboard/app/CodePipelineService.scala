@@ -106,6 +106,7 @@ final class CodePipelineServiceImpl(console: Console.Service, codepipeline: Code
           )
         }
       }
+
 object CodePipelineServiceImpl:
   lazy val layer: URLayer[Has[Console.Service] with Has[CodePipeline.Service], Has[CodePipelineService]] =
     (CodePipelineServiceImpl(_, _)).toLayer

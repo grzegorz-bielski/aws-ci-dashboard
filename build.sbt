@@ -40,8 +40,7 @@ lazy val frontend =
       ),
       jsEnv := new JSDOMNodeJSEnv(),
       scalaJSUseMainModuleInitializer := true,
-      scalaJSLinkerConfig ~= { _.withModuleKind(ModuleKind.ESModule) },
-      scalaJSLinkerConfig ~= { _.withSourceMap(false) }
+      scalaJSLinkerConfig ~= { _.withModuleKind(ModuleKind.ESModule) }
     )
     .dependsOn(shared.js)
 

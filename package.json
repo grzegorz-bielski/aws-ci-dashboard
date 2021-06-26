@@ -4,13 +4,14 @@
   "dependencies": {
     "jsdom": "^16.6.0"
   },
+  "type": "module",
   "devDependencies": {
-    "vite": "^2.3.8",
-    "vite-plugin-html": "^2.0.7"
+    "http2-proxy": "^5.0.53",
+    "snowpack": "^3.6.2"
   },
   "scripts": {
-    "dev": "vite", 
-    "build": "vite build",
-    "serve": "vite preview" 
+    "dev": "snowpack dev",
+    "build": "snowpack build",
+    "snowpack": "snowpack"
   }
 }
