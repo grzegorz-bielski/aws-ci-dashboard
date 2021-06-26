@@ -12,7 +12,7 @@ import io.circe.Decoder
 import io.circe.parser.parse
 import cats.syntax.functorFilter.given
 
-import CodePipelineModels.*
+import com.awscidashboard.models.CodePipelineModels.*
 
 trait CodePipelineService:
   def getPipelinesDetails(): IO[AwsError, Vector[PipelineDetailsModel]]
@@ -61,8 +61,8 @@ final class CodePipelineServiceImpl(console: Console.Service, codepipeline: Code
       .getPipelineState(GetPipelineStateRequest(name))
       .map(_.editable)
 
-  private def getPipelineStages(state: GetPipelineStateResponse) =
-    state.stageStates.map(_.toVector) getOrElse Vector.empty
+  // private def getPipelineStages(state: GetPipelineStateResponse) =
+  //   state.stageStates.map(_.toVector) getOrElse Vector.empty
 
   private def getLatestPipelineExecution(pipelineName: String): IO[AwsError, Option[PipelineExecutionModel]] =
     codepipeline
@@ -72,6 +72,12 @@ final class CodePipelineServiceImpl(console: Console.Service, codepipeline: Code
       .flatMap(_.map(getPipelineExecution(pipelineName, _)).getOrElse(ZIO.succeed(None))) //todo: use traverse
 
   private def getPipelineExecution(pipelineName: String, executionId: String) =
+    given decodeRevisionSummaryFromAWS: Decoder[RevisionSummaryModel] = Decoder { c =>
+      c.get[String]("ProviderType").flatMap { case "GitHub" =>
+        c.get[String]("CommitMessage").map(RevisionSummaryModel.GitHub(_))
+      }
+    }
+
     codepipeline
       .getPipelineExecution(GetPipelineExecutionRequest(pipelineName, executionId))
       .map(_.editable.pipelineExecution)
@@ -91,7 +97,13 @@ final class CodePipelineServiceImpl(console: Console.Service, codepipeline: Code
                   parse(_).flatMap(_.as[RevisionSummaryModel]).toOption
                 )
               )
-          yield PipelineExecutionModel(id, name, version, status, latestRevision)
+          yield PipelineExecutionModel(
+            id,
+            name,
+            version,
+            status.toString.asInstanceOf[PipelineExecStatus],
+            latestRevision
+          )
         }
       }
 object CodePipelineServiceImpl:

@@ -1,89 +1,78 @@
 package com.awscidashboard.app
 
 import org.scalajs.dom
-import scala.concurrent.Future
 
 import com.raquo.laminar.api.L.{*, given}
 
-import io.circe.Codec
-import io.circe.parser.decode
-import io.circe.syntax.given
+import com.awscidashboard.models.CodePipelineModels.*
 
 object Main:
-  extension [A <: Throwable, B](e: Either[A, B])
-    def toFuture: Future[B] =
-      e.fold(Future.failed(_), Future.successful(_))
-
-  extension [A, B](e: Either[A, B])
-    def mapLeft[A1](f: A => A1): Either[A1, B] = e match
-      case Left(a) => Left(f(a))
-      case _       => e.asInstanceOf[Either[A1, B]]
-
-  case class Todo(
-      id: Int,
-      userId: Int,
-      title: String,
-      completed: Boolean
-  ) derives Codec.AsObject
 
   def main(args: Array[String]): Unit =
-    println("halko")
-    dom.console.log("halko")
+    // println("halko")
+    // dom.console.log("halko")
 
-    val name$ = Var("world")
+    // val name$ = Var("world")
 
-    val InputBox = div(
-      label("Your name: "),
-      input(
-        onMountFocus,
-        placeholder := "Enter your name here",
-        onInput.mapToValue --> name$
-      ),
-      span(
-        "Hello, ",
-        child.text <-- name$.signal.map(_.toUpperCase)
+    // val InputBox = div(
+    //   label("Your name: "),
+    //   input(
+    //     onMountFocus,
+    //     placeholder := "Enter your name here",
+    //     onInput.mapToValue --> name$
+    //   ),
+    //   span(
+    //     "Hello, ",
+    //     child.text <-- name$.signal.map(_.toUpperCase)
+    //   )
+    // )
+
+    val Header = h1("Dashboard", cls := "title")
+
+    val Pipeline = (pipeline: PipelineDetailsModel) =>
+      li(
+        cls("column"),
+        article(
+          header(
+            cls := "card-header",
+            h3(
+              pipeline.name,
+              cls := "card-header-title"
+            ),
+            p(
+              cls := "content",
+              pipeline.version.map(_.toString).getOrElse(""),
+              pipeline.created.map(_.toString).getOrElse(""),
+              pipeline.updated.map(_.toString).getOrElse(""),
+              pipeline.revision.map { case RevisionSummaryModel.GitHub(msg) => msg }.getOrElse(""),
+              pipeline.latestExecution.map(a => a.toString).getOrElse("")
+            )
+          )
+        )
       )
-    )
 
-    val Stuff = div(
-      h2("Stuff below"),
-      child.text <-- HttpService.GET("https://jsonplaceholder.typicode.com/todos/1").map {
-        case Some(todo) => todo.title
-        case None       => "Nothing yet"
+    val Pipelines = div(
+      cls("container", "is-fluid"),
+      h2(
+        cls("mb-5"),
+        "Pipelines"
+      ),
+      child <-- HttpService.GET[Vector[PipelineDetailsModel]]("/api/pipelines").map {
+        case None => span("Nothing yet")
+        case Some(pipelines) =>
+          ul(
+            cls := "columns",
+            pipelines.map(Pipeline)
+          )
       }
     )
 
     val App = div(
-      InputBox,
-      Stuff
+      Header,
+      Pipelines
     )
 
-    dom.window.addEventListener(
-      "DOMContentLoaded",
-      _ =>
-        render(
-          dom.document.querySelector("#app"),
-          App
-        )
+    render(
+      dom.document.querySelector("#app"),
+      App
     )
-
-  end main
-  object HttpService:
-    // standard JS event loop
-    import scala.concurrent.ExecutionContext.Implicits.global
-
-    import org.scalajs.dom.experimental.Fetch.*
-    import org.scalajs.dom.experimental.HttpMethod
-
-    def GET(endpoint: String) =
-      val result =
-        fetch(
-          endpoint,
-          new {
-            override val method = HttpMethod.GET
-          }
-        ).toFuture
-          .flatMap(_.text.toFuture)
-          .flatMap(res => decode[Todo](res).mapLeft(_.fillInStackTrace).toFuture)
-
-      Signal.fromFuture(result) // todo: use Remote type instead of Option

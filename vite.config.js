@@ -16,13 +16,13 @@ export default ({ command, mode }) => {
   return defineConfig({
     root: './frontend',
     server: {
-    //   proxy: {
-    //     "/api": {
-    //       target: "http://localhost:8088",
-    //       changeOrigin: true,
-    //       rewrite: (path) => path.replace(/^\/api/, ""),
-    //     },
-    //   },
+      proxy: {
+        "/api": {
+          target: "http://localhost:8090",
+          changeOrigin: true,
+          rewrite: (path) => path.replace(/^\/api/, ""),
+        },
+      },
     },
     // publicDir: "./src/main/resources/public",
     plugins: [
