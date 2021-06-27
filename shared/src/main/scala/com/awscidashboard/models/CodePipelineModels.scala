@@ -18,7 +18,6 @@ object CodePipelineModels:
   case class PipelineDetailsModel(
       name: String,
       version: Option[Int],
-      revision: Option[RevisionSummaryModel],
       created: Option[Instant],
       updated: Option[Instant],
       latestExecution: Option[PipelineExecutionModel]

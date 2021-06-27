@@ -38,7 +38,6 @@ final class CodePipelineServiceImpl(console: Console.Service, codepipeline: Code
     yield PipelineDetailsModel(
       name = pipelineName,
       version = state.pipelineVersion,
-      revision = None,
       created = state.created,
       updated = state.updated,
       latestExecution = latestExecution
