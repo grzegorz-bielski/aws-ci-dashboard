@@ -6,6 +6,7 @@
   },
   "type": "module",
   "devDependencies": {
+    "@snowpack/plugin-sass": "^1.4.0",
     "http2-proxy": "^5.0.53",
     "snowpack": "^3.6.2"
   },
