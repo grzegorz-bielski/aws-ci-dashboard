@@ -12,20 +12,22 @@ import com.awscidashboard.app.HttpService
 import com.awscidashboard.app.LaminarOps.{*, given}
 
 @js.native
-@JSImport("./styles/pipelines.module.scss", JSImport.Default)
-object styles extends js.Object:
-  val pipelines: String = js.native
+@JSImport("./styles/pipelines.scss", JSImport.Default)
+object Css extends js.Object
+val css = Css
 
 lazy val Pipelines = div(
-  cls("container", "is-fluid", styles.pipelines),
+  cls("container", "is-fluid", "pipelines"),
   h2(
     cls("mb-5"),
     "Pipelines"
   ),
+  // todo: use split operator, extract service to param
   child <-- HttpService.GET[Vector[PipelineDetailsModel]]("/api/pipelines").map {
     case None => span("Nothing yet")
     case Some(pipelines) =>
       ul(
+        cls("pipelines__list"),
         // cls := "columns",
         // cls("is-flex", "is-flex-wrap-wrap"),
         pipelines.map(Pipeline)
@@ -37,7 +39,7 @@ private lazy val Pipeline = (pipeline: PipelineDetailsModel) =>
   import pipeline.{latestExecution, version, name}
 
   li(
-    cls("is-clickable"),
+    cls("is-clickable", "pipeline"),
     // width := "320px",
     article(
       cls("message", "card"),
