@@ -5,18 +5,14 @@ import scala.scalajs.js
 import scala.scalajs.js.annotation.*
 
 import com.raquo.laminar.api.L.*
-import com.awscidashboard.app.pipelines.*
+import com.awscidashboard.app.AppRouter
 
 object Main:
   def main(args: Array[String]): Unit =
-    val Header = h1("Dashboard", cls := "title")
-
-    val App = div(
-      Header,
-      Pipelines
-    )
-
+    // val App = Pipelines
     render(
       dom.document.querySelector("#app"),
-      App
+      div(
+        child <-- AppRouter()
+      )
     )

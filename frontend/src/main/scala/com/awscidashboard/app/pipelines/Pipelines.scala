@@ -19,7 +19,7 @@ val css = Css
 lazy val Pipelines = div(
   cls("container", "is-fluid", "pipelines"),
   h2(
-    cls("mb-5"),
+    cls("pipelines__header", "title"),
     "Pipelines"
   ),
   // todo: use split operator, extract service to param
@@ -39,10 +39,9 @@ private lazy val Pipeline = (pipeline: PipelineDetailsModel) =>
   import pipeline.{latestExecution, version, name}
 
   li(
-    cls("is-clickable", "pipeline"),
     // width := "320px",
     article(
-      cls("message", "card"),
+      cls("message", "card", "is-clickable", "pipeline"),
       // cls := "card",
       cls :?= latestExecution.map(_.status).collect {
         case "Failed"     => "is-danger"
@@ -60,7 +59,7 @@ private lazy val Pipeline = (pipeline: PipelineDetailsModel) =>
         )
       ),
       div(
-        cls("message-body"),
+        cls("message-body", "pipeline__body"),
         // pipeline.version.map(_.toString).getOrElse(""),
         // pipeline.created.map(_.toString).getOrElse(""),
         // pipeline.updated.map(_.toString).getOrElse(""),

@@ -32,9 +32,10 @@ lazy val frontend =
     .enablePlugins(ScalaJSPlugin)
     .settings(
       libraryDependencies ++= Seq(
+        "com.raquo" %%% "laminar" % "0.13.0",
+        "io.frontroute" %%% "frontroute" % "0.13.3",
         ("org.scala-js" %%% "scalajs-dom" % "1.1.0")
           .cross(CrossVersion.for3Use2_13),
-        "com.raquo" %%% "laminar" % "0.13.0",
         ("io.github.cquiroz" %%% "scala-java-time" % "2.2.2") // maybe we could somehow get rid of this...
           .cross(CrossVersion.for3Use2_13)
       ),
