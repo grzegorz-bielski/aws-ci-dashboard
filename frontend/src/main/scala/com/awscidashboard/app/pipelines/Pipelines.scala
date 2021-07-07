@@ -11,10 +11,10 @@ import com.awscidashboard.models.CodePipelineModels.*
 import com.awscidashboard.app.HttpService
 import com.awscidashboard.app.LaminarOps.{*, given}
 
-@js.native
-@JSImport("./styles/pipelines.scss", JSImport.Default)
-object Css extends js.Object
-val css = Css
+// @js.native
+// @JSImport("../styles/pipelines.scss", JSImport.Default)
+// object Css extends js.Object
+// val css = Css
 
 lazy val Pipelines = div(
   cls("container", "is-fluid", "pipelines"),
