@@ -4,7 +4,7 @@ import org.scalajs.dom
 import com.raquo.laminar.api.L.*
 import io.frontroute.*
 
-import com.awscidashboard.app.pipelines.Pipelines
+import com.awscidashboard.app.pipelines.*
 
 object AppRouter:
   lazy val (renders, route) = makeRoute[HtmlElement] { render =>
@@ -14,6 +14,9 @@ object AppRouter:
       },
       path("pipelines") {
         render(Pipelines)
+      },
+      path("pipelines" / segment) { id =>
+        render(PipelineDetails(id))
       }
     )
   }
@@ -25,5 +28,6 @@ object AppRouter:
     )(unsafeWindowOwner)
 
     BrowserNavigation.emitPopStateEvent()
+    LinkHandler.install()
 
     renders.map(_.getOrElse(span("Loading...")))
