@@ -14,7 +14,7 @@ import java.nio.file.FileSystems
 object Main extends App:
   override def run(_args: List[String]) =
     Server
-      .start(8090, staticApp +++ app)
+      .start(8090, app +++ staticApp)
       .provideCustomLayer(appLayer)
       .exitCode
 
@@ -32,9 +32,6 @@ object Main extends App:
 
   lazy val staticApp = HttpApp
     .collect {
-      case Method.GET -> Root =>
-        Response.http(content = resourceAt("./build/index.html"))
-
       case Method.GET -> Root / "scripts" / script =>
         Response.http(
           content = resourceAt(s"./build/scripts/$script"),
@@ -50,6 +47,9 @@ object Main extends App:
             Header.custom("content-type", "text/css")
           )
         )
+
+      case _ =>
+        Response.http(content = resourceAt("./build/index.html"))
     }
 
   lazy val app = HttpApp
@@ -60,5 +60,6 @@ object Main extends App:
           .map(p => Response.jsonString(p.asJson.toString))
           .orElseSucceed(Response.jsonString("""{"error": "500"}"""))
 
-      case _ => ZIO.succeed(Response.jsonString("""{"error": "404"}"""))
+       case Method.GET -> Root / "api" => 
+        ZIO.succeed(Response.jsonString("""{"error": "404"}"""))
     }

@@ -28,37 +28,45 @@ lazy val Pipelines = div(
   }
 )
 
+lazy val PipelineDetails = (id: String) =>
+  div(
+    s"Some page: $id"
+  )
+
 private lazy val Pipeline = (pipeline: PipelineDetailsModel) =>
   import pipeline.{latestExecution, version, name}
 
   li(
-    article(
-      cls("message", "card", "pipeline"),
-      cls :?= latestExecution.map(_.status).collect {
-        case "Failed"     => "is-danger"
-        case "Succeeded"  => "is-success"
-        case "InProgress" => "is-info"
-      },
-      header(
-        cls("message-header"),
-        h3(
-          cls("has-text-weight-bold", "is-size-6"),
-          name ++ version.map(v => s" #$v").mkString
+    a(
+      href := s"/pipelines/$name",
+      article(
+        cls("message", "card", "pipeline"),
+        cls :?= latestExecution.map(_.status).collect {
+          case "Failed"     => "is-danger"
+          case "Succeeded"  => "is-success"
+          case "InProgress" => "is-info"
+        },
+        header(
+          cls("message-header"),
+          h3(
+            cls("has-text-weight-bold", "is-size-6"),
+            name ++ version.map(v => s" #$v").mkString
+          ),
+          span(
+            latestExecution.map(_.status).mkString
+          )
         ),
-        span(
-          latestExecution.map(_.status).mkString
-        )
-      ),
-      div(
-        cls("message-body", "pipeline__body"),
-        // pipeline.version.map(_.toString).getOrElse(""),
-        // pipeline.created.map(_.toString).getOrElse(""),
-        // pipeline.updated.map(_.toString).getOrElse(""),
-        code(
-          latestExecution
-            .map(_.latestRevision)
-            .map { case RevisionSummaryModel.GitHub(msg) => s"GitHub: $msg" }
-            .mkString
+        div(
+          cls("message-body", "pipeline__body"),
+          // pipeline.version.map(_.toString).getOrElse(""),
+          // pipeline.created.map(_.toString).getOrElse(""),
+          // pipeline.updated.map(_.toString).getOrElse(""),
+          code(
+            latestExecution
+              .map(_.latestRevision)
+              .map { case RevisionSummaryModel.GitHub(msg) => s"GitHub: $msg" }
+              .mkString
+          )
         )
       )
     )
