@@ -11,14 +11,15 @@ import com.awscidashboard.models.CodePipelineModels.*
 import com.awscidashboard.app.HttpService
 import com.awscidashboard.app.LaminarOps.{given, *}
 
+
 lazy val Pipelines = div(
-  cls("container", "is-fluid", "pipelines"),
+  cls("pipelines"),
   h2(
     cls("pipelines__header", "title"),
     "Pipelines"
   ),
   // todo: use split operator, extract service to param
-  child <-- HttpService.GET[Vector[PipelineDetailsModel]]("/api/pipelines").map {
+  child <-- HttpService.GET[Vector[PipelineSummaryModel]]("/api/pipelines").map {
     case None => span("Nothing yet")
     case Some(pipelines) =>
       ul(
@@ -28,13 +29,8 @@ lazy val Pipelines = div(
   }
 )
 
-lazy val PipelineDetails = (id: String) =>
-  div(
-    s"Some page: $id"
-  )
-
-private lazy val Pipeline = (pipeline: PipelineDetailsModel) =>
-  import pipeline.{latestExecution, version, name}
+private lazy val Pipeline = (pipeline: PipelineSummaryModel) =>
+  import pipeline.{latestExecution, name}
 
   li(
     a(
@@ -50,7 +46,7 @@ private lazy val Pipeline = (pipeline: PipelineDetailsModel) =>
           cls("message-header"),
           h3(
             cls("has-text-weight-bold", "is-size-6"),
-            name ++ version.map(v => s" #$v").mkString
+            name
           ),
           span(
             latestExecution.map(_.status).mkString
@@ -58,9 +54,6 @@ private lazy val Pipeline = (pipeline: PipelineDetailsModel) =>
         ),
         div(
           cls("message-body", "pipeline__body"),
-          // pipeline.version.map(_.toString).getOrElse(""),
-          // pipeline.created.map(_.toString).getOrElse(""),
-          // pipeline.updated.map(_.toString).getOrElse(""),
           code(
             latestExecution
               .map(_.latestRevision)

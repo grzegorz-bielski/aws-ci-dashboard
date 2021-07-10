@@ -9,10 +9,10 @@ import com.awscidashboard.app.AppRouter
 
 object Main:
   def main(args: Array[String]): Unit =
-    // val App = Pipelines
     render(
       dom.document.querySelector("#app"),
       div(
+        cls("container", "is-fluid", "mt-4"),
         child <-- AppRouter()
       )
     )

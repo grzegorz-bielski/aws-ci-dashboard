@@ -30,4 +30,4 @@ object AppRouter:
     BrowserNavigation.emitPopStateEvent()
     LinkHandler.install()
 
-    renders.map(_.getOrElse(span("Loading...")))
+    renders.map(_.getOrElse(div()))

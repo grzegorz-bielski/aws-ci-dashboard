@@ -32,13 +32,15 @@ object Main extends App:
     FileSystems.getDefault.getPath(path).normalize.toAbsolutePath
 
   private def resourceAt(path: String) =
-    HttpData.fromStream(ZStream.fromFile(fileAt(path)))
+    val fPath = fileAt(s"../build/$path")
+    println(fPath)
+    HttpData.fromStream(ZStream.fromFile(fPath))
 
   lazy val staticApp = HttpApp
     .collect {
       case Method.GET -> Root / "scripts" / script =>
         Response.http(
-          content = resourceAt(s"./build/scripts/$script"),
+          content = resourceAt(s"scripts/$script"),
           headers = List(
             Header.custom("content-type", "application/javascript")
           )
@@ -46,21 +48,27 @@ object Main extends App:
 
       case Method.GET -> Root / "styles" / styleSheet =>
         Response.http(
-          content = resourceAt(s"./build/styles/$styleSheet"),
+          content = resourceAt(s"styles/$styleSheet"),
           headers = List(
             Header.custom("content-type", "text/css")
           )
         )
 
       case _ =>
-        Response.http(content = resourceAt("./build/index.html"))
+        Response.http(content = resourceAt("index.html"))
     }
 
   lazy val app = HttpApp
     .collectM {
       case Method.GET -> Root / "api" / "pipelines" =>
         CodePipelineService
-          .getPipelinesDetails()
+          .getPipelinesSummaries()
+          .map(p => Response.jsonString(p.asJson.toString))
+          .orElseSucceed(Response.jsonString("""{"error": "500"}"""))
+
+      case Method.GET -> Root / "api" / "pipelines" / pipelineName =>
+        CodePipelineService
+          .getPipelineDetails(pipelineName)
           .map(p => Response.jsonString(p.asJson.toString))
           .orElseSucceed(Response.jsonString("""{"error": "500"}"""))
 
