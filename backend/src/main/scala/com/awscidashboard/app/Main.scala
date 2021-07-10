@@ -13,8 +13,12 @@ import java.nio.file.FileSystems
 
 object Main extends App:
   override def run(_args: List[String]) =
+    val port = 8090
+
+    println(s"Starting app at $port port")
+
     Server
-      .start(8090, app +++ staticApp)
+      .start(port, app +++ staticApp)
       .provideCustomLayer(appLayer)
       .exitCode
 
@@ -24,10 +28,10 @@ object Main extends App:
 
     (runtimeLayer ++ awsLayer) >>> CodePipelineServiceImpl.layer
 
-  def fileAt(path: String) =
+  private def fileAt(path: String) =
     FileSystems.getDefault.getPath(path).normalize.toAbsolutePath
 
-  def resourceAt(path: String) =
+  private def resourceAt(path: String) =
     HttpData.fromStream(ZStream.fromFile(fileAt(path)))
 
   lazy val staticApp = HttpApp
