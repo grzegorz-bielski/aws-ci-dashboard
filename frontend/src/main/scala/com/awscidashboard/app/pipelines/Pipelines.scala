@@ -4,17 +4,12 @@ import org.scalajs.dom
 import scala.scalajs.js
 import scala.scalajs.js.annotation.*
 
-import com.raquo.laminar.api.L.{*, given}
+import com.raquo.laminar.api.L.{given, *}
 
 import com.awscidashboard.models.CodePipelineModels.*
 
 import com.awscidashboard.app.HttpService
-import com.awscidashboard.app.LaminarOps.{*, given}
-
-// @js.native
-// @JSImport("../styles/pipelines.scss", JSImport.Default)
-// object Css extends js.Object
-// val css = Css
+import com.awscidashboard.app.LaminarOps.{given, *}
 
 lazy val Pipelines = div(
   cls("container", "is-fluid", "pipelines"),
@@ -28,8 +23,6 @@ lazy val Pipelines = div(
     case Some(pipelines) =>
       ul(
         cls("pipelines__list"),
-        // cls := "columns",
-        // cls("is-flex", "is-flex-wrap-wrap"),
         pipelines.map(Pipeline)
       )
   }
@@ -39,10 +32,8 @@ private lazy val Pipeline = (pipeline: PipelineDetailsModel) =>
   import pipeline.{latestExecution, version, name}
 
   li(
-    // width := "320px",
     article(
-      cls("message", "card", "is-clickable", "pipeline"),
-      // cls := "card",
+      cls("message", "card", "pipeline"),
       cls :?= latestExecution.map(_.status).collect {
         case "Failed"     => "is-danger"
         case "Succeeded"  => "is-success"
