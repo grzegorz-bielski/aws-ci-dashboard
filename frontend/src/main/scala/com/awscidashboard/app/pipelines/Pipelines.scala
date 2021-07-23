@@ -8,6 +8,7 @@ import com.raquo.laminar.api.L.{given, *}
 
 import com.awscidashboard.models.CodePipelineModels.*
 
+import com.awscidashboard.app.Remote
 import com.awscidashboard.app.HttpService
 import com.awscidashboard.app.LaminarOps.{given, *}
 
@@ -20,8 +21,10 @@ lazy val Pipelines = div(
   ),
   // todo: use split operator, extract service to param
   child <-- HttpService.GET[Vector[PipelineSummaryModel]]("/api/pipelines").map {
-    case None => span("Nothing yet")
-    case Some(pipelines) =>
+    case Remote.Initial => span("not started")
+    case Remote.Pending => span("loading")
+    case Remote.Failure(_) => span("error")
+    case Remote.Success(pipelines) =>
       ul(
         cls("pipelines__list"),
         pipelines.map(Pipeline)
