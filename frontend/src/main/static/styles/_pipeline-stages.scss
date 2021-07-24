@@ -1,7 +1,25 @@
 .pipeline-stages {
   margin-top: 1rem;
+  max-width: 40rem;
 
   &__stage {
+    list-style-type: none;
+  }
+
+  &__full-stage-name {
+    margin-bottom: 1rem;
+  }
+
+  &--full-stage {
+    margin-bottom: 1.5rem;
+
+    .pipeline-stages__stage-action {
+      margin-bottom: 1rem;
+    }
+  }
+
+  &__stage-actions {
+    list-style-type: none;
   }
 
   &__stage-action {

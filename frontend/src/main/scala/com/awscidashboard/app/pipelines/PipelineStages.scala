@@ -8,41 +8,111 @@ import com.raquo.laminar.api.L.{given, *}
 
 import com.awscidashboard.models.CodePipelineModels.*
 import com.awscidashboard.app.LaminarOps.{given, *}
+import java.time.Instant
 
-lazy val PipelineStages = (stages: Vector[PipelineStageModel]) =>
+def PipelineStages(pipeline: PipelineDetailsModel) =
+  lazy val revisionDetails = pipeline.latestExecution
+    .map(_.latestRevision)
+    .collect { case RevisionSummaryModel.GitHub(msg) => s"Github: $msg" }
+    .mkString
+
+  ol(
+    cls("pipeline-stages"),
+    pipeline.stages.zipWithIndex.map { (stage, i) =>
+      if stage.actions.size == 1 then 
+        CollapsedStage(
+          stage,
+            if i == 0 
+            then
+              a(
+                revisionDetails,
+                href := stage.actions.head.revisionUrl.mkString
+              )
+            else None
+          
+        )
+      else FullStage(stage)
+    }
+  )
+
+def FullStage(stage: PipelineStageModel) =
+  li(
+    cls("pipeline-stages__stage", "pipeline-stages--full-stage"),
+    header(
+      cls("pipeline-stages__full-stage-name"),
+           span(
+      cls("has-text-weight-semibold"),
+      stage.name.mkString
+    )
+    ),
     ol(
-      cls("pipeline-stages"),
-      stages.map { stage =>
+      cls("pipeline-stages__stage-actions"),
+      stage.actions.map { action =>
         li(
-          cls("pipeline-stages__stage"),
-          div(s"stage name: ${stage.name.mkString}"),
-          div(
-            s"status: ${stage.latestExecution.map(_.executionId).mkString} - ${stage.latestExecution.map(_.status).mkString}"
-          ),
-            ol(
-              stage.actions.map { action =>
-                li(
-                  cls("pipeline-stages__stage-action"),
-                  div(s"action name: ${action.name}"),
-                  a("entity", href := action.entityUrl.mkString),
-                  a("revision", href := action.revisionUrl.mkString),
-                  action.latestExecution.map { e =>
-                    div(
-                      div(s"status: ${e.executionId.mkString} - ${e.status.mkString}"),
-                      div(s"summary: ${e.summary.mkString}"),
-                      div(s"lastStatusChange: ${e.lastStatusChange.mkString}"),
-                      div(s"token: ${e.token.mkString}"),
-                      div(s"lastUpdatedBy: ${e.lastUpdatedBy.mkString}"),
-                      div(s"externalExecutionId: ${e.externalExecutionId.mkString}"),
-                      div(s"externalExecutionUrl: ${e.externalExecutionUrl.mkString}"),
-                      div(s"percentComplete: ${e.percentComplete.mkString}"),
-                      div(s"errorDetails: ${e.errorDetails.mkString}")
-                    )
-                  }
-                )
-              }
+          cls("pipeline-stages__stage-action", "message"),
+          cls :?= getActionStatus(action),
+          StageAction(
+              action
             )
         )
       }
     )
+  )
 
+def CollapsedStage(stage: PipelineStageModel, actionSlots: Mod[HtmlElement]*) =
+  val firstAction = stage.actions.headOption
+
+  li(
+    cls("pipeline-stages__stage", "message"),
+    cls :?= firstAction.flatMap(getActionStatus),
+    firstAction.map { action =>
+      StageAction(
+        action,
+        bodySlots = actionSlots
+      )
+    }
+  )
+
+def StageAction(action: PipelineStageActionModel, bodySlots: Mod[HtmlElement]*) =
+  action.latestExecution
+    .map { e =>
+      div(
+        cls("message-body"),
+        StatusHeader(action.name, e.lastStatusChange),
+        bodySlots,
+        e.errorDetails.map { err =>
+          code(
+            s"${err.code.mkString} - ${err.message.mkString}"
+          )
+        }
+      )
+    }
+    .getOrElse(
+      div(
+        cls("message-body"),
+        div(
+          StatusHeader(action.name)
+        )
+      )
+    )
+
+def StatusHeader(name: Option[String], lastStatusChange: Option[Instant] = None) =
+  header(
+    span(
+      cls("has-text-weight-semibold"),
+      name.mkString
+    ),
+    span(
+      " | "
+    ),
+    span(
+      lastStatusChange.map(_.toString).getOrElse("Didn't run")
+    )
+  )
+
+def getActionStatus(action: PipelineStageActionModel) =
+    action.latestExecution.flatMap(_.status).collect {
+      case "Succeeded"  => "is-success"
+      case "Failed"     => "is-danger"
+      case "InProgress" => "is-info"
+    }

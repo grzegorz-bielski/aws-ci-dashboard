@@ -38,6 +38,7 @@ object HttpService:
       case _       => e.asInstanceOf[Either[A1, B]]
 
   def GET[A: Decoder](endpoint: String): Signal[Remote[A]] =
+    // maybe I can just use com.raquo.airstream.web.AjaxEventStream
     fetch(
       endpoint,
       new {

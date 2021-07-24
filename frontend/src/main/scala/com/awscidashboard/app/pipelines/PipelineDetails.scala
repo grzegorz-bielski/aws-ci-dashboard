@@ -29,21 +29,7 @@ lazy val PipelineDetails = (pipelineName: String) =>
       case Remote.Pending    => div("loading")
       case Remote.Failure(e) => div(s"error: ${e.toString}")
       case Remote.Success(pipeline) =>
-        div(
-          aside(
-            cls("pipeline-details-info"),
-            // p(
-            //   pipeline.latestExecution
-            //     .map(_.latestRevision)
-            //     .collect { case RevisionSummaryModel.GitHub(msg) => s"Github: $msg" }
-            //     .mkString
-            // ),
-            p(
-              s"Execution: ${pipeline.latestExecution.map(_.id).mkString}"
-            )
-          ),
-          PipelineStages(pipeline.stages)
-       )
+       PipelineStages(pipeline)
     }
   )
 
