@@ -1,6 +1,8 @@
 .pipelines {
-  &__header {
+  &__heading {
     margin-bottom: 2rem;
+    font-weight: 500;
+    font-size: 2rem;
   }
 
   &__list {

@@ -16,8 +16,8 @@ import com.awscidashboard.app.LaminarOps.{given, *}
 lazy val Pipelines = div(
   cls("pipelines"),
   h2(
-    cls("pipelines__header", "title"),
-    "Pipelines"
+    cls("pipelines__heading"),
+    "pipelines"
   ),
   // todo: use split operator, extract service to param
   child <-- HttpService.GET[Vector[PipelineSummaryModel]]("/api/pipelines").map {
