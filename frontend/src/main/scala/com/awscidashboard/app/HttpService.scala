@@ -14,7 +14,25 @@ import scala.util.Success
 import scala.util.Failure
 import com.raquo.airstream.core.EventStream
 
+trait HttpService {
+  def GET[A: Decoder](endpoint: String): Signal[Remote[A]]
+}
+
 object HttpService:
+  lazy val live = new HttpService:
+    override def GET[A: Decoder](endpoint: String): Signal[Remote[A]] =
+    // maybe I can just use com.raquo.airstream.web.AjaxEventStream
+    fetch(
+      endpoint,
+      new {
+        override val method = HttpMethod.GET
+      }
+    ).toFuture
+      .flatMap(_.text.toFuture)
+      .flatMap(decode[A](_).mapLeft(_.fillInStackTrace).toFuture)
+      .toRemoteSignal
+
+
   // most of these extensions should go to some ops class
   extension [A <: Throwable, B](e: Either[A, B])
     def toFuture: Future[B] =
@@ -36,15 +54,3 @@ object HttpService:
     def mapLeft[A1](f: A => A1): Either[A1, B] = e match
       case Left(a) => Left(f(a))
       case _       => e.asInstanceOf[Either[A1, B]]
-
-  def GET[A: Decoder](endpoint: String): Signal[Remote[A]] =
-    // maybe I can just use com.raquo.airstream.web.AjaxEventStream
-    fetch(
-      endpoint,
-      new {
-        override val method = HttpMethod.GET
-      }
-    ).toFuture
-      .flatMap(_.text.toFuture)
-      .flatMap(decode[A](_).mapLeft(_.fillInStackTrace).toFuture)
-      .toRemoteSignal

@@ -12,8 +12,8 @@ import com.awscidashboard.app.Remote
 import com.awscidashboard.app.HttpService
 import com.awscidashboard.app.LaminarOps.{given, *}
 
-lazy val PipelineDetails = (pipelineName: String) =>
-  lazy val pipeline$ = HttpService.GET[PipelineDetailsModel](s"/api/pipelines/$pipelineName")
+def PipelineDetails(pipelineName: String)(using pipelineService: PipelineService) =
+  lazy val pipeline$ = pipelineService.pipelineDetailsPoll(pipelineName)
 
   div(
     header(
@@ -33,7 +33,7 @@ lazy val PipelineDetails = (pipelineName: String) =>
     }
   )
 
-lazy val Pills = (pipeline$ : Signal[Remote[PipelineDetailsModel]]) =>
+private def Pills(pipeline$ : Signal[Remote[PipelineDetailsModel]]) =
   div(
     cls("field", "is-grouped"),
     child <-- pipeline$.map {
