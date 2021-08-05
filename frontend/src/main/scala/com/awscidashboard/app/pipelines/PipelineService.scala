@@ -1,14 +1,15 @@
 package com.awscidashboard.app.pipelines
 
-import com.raquo.laminar.api.L.EventStream
+import com.raquo.laminar.api.L.*
 
 import com.awscidashboard.app.HttpService
 import com.awscidashboard.models.CodePipelineModels.*
+import com.awscidashboard.app.Remote
 
 trait PipelineService:
     lazy val httpService: HttpService
 
-    def pipelineSummaryPoll = 
+    def pipelineSummaryPoll() =
         poll().flatMap(_ => httpService.GET[Vector[PipelineSummaryModel]]("/api/pipelines"))
 
     def pipelineDetailsPoll(pipelineName: String) = 

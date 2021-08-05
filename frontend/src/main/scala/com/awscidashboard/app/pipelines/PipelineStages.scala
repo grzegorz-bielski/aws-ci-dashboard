@@ -35,7 +35,7 @@ def PipelineStages(pipeline: PipelineDetailsModel) =
     }
   )
 
-def FullStage(stage: PipelineStageModel) =
+private def FullStage(stage: PipelineStageModel) =
   li(
     cls("pipeline-stages__stage", "pipeline-stages--full-stage"),
     header(
@@ -59,7 +59,7 @@ def FullStage(stage: PipelineStageModel) =
     )
   )
 
-def CollapsedStage(stage: PipelineStageModel, actionSlots: Mod[HtmlElement]*) =
+private def CollapsedStage(stage: PipelineStageModel, actionSlots: Mod[HtmlElement]*) =
   val firstAction = stage.actions.headOption
 
   li(
@@ -73,7 +73,7 @@ def CollapsedStage(stage: PipelineStageModel, actionSlots: Mod[HtmlElement]*) =
     }
   )
 
-def StageAction(action: PipelineStageActionModel, bodySlots: Mod[HtmlElement]*) =
+private def StageAction(action: PipelineStageActionModel, bodySlots: Mod[HtmlElement]*) =
   action.latestExecution
     .map { e =>
       div(
@@ -96,7 +96,7 @@ def StageAction(action: PipelineStageActionModel, bodySlots: Mod[HtmlElement]*) 
       )
     )
 
-def StatusHeader(name: Option[String], lastStatusChange: Option[Instant] = None) =
+private def StatusHeader(name: Option[String], lastStatusChange: Option[Instant] = None) =
   header(
     span(
       cls("has-text-weight-semibold"),
@@ -110,7 +110,7 @@ def StatusHeader(name: Option[String], lastStatusChange: Option[Instant] = None)
     )
   )
 
-def getActionStatus(action: PipelineStageActionModel) =
+private def getActionStatus(action: PipelineStageActionModel) =
     action.latestExecution.flatMap(_.status).collect {
       case "Succeeded"  => "is-success"
       case "Failed"     => "is-danger"

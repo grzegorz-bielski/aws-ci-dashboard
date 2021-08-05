@@ -14,27 +14,33 @@ import com.awscidashboard.app.LaminarOps.{given, *}
 
 // given Owner = unsafeWindowOwner
 
-def Pipelines(using pipelineService: PipelineService) = 
-  lazy val pipelines$ = pipelineService.pipelineSummaryPoll
+def Pipelines(using pipelineService: PipelineService) =
+  lazy val v = Var(Remote.Initial.asInstanceOf[Remote[Vector[PipelineSummaryModel]]])
+  lazy val pipelines$ = v.signal
+  lazy val pipelinesObserver = v.updater[Remote[Vector[PipelineSummaryModel]]] {
+    case (Remote.Success(a), Remote.Pending) => Remote.Success(a)
+    case (_, next)                           => next
+  }
 
   div(
-  cls("pipelines"),
-  h2(
-    cls("pipelines__heading"),
-    "pipelines"
-  ),
-  // todo: use split operator, extract service to param
-  child <-- pipelines$.map {
-    case Remote.Initial => span("not started")
-    case Remote.Pending => span("loading")
-    case Remote.Failure(_) => span("error")
-    case Remote.Success(pipelines) =>
-      ul(
-        cls("pipelines__list"),
-        pipelines.map(Pipeline)
-      )
-  }
-)
+    pipelineService.pipelineSummaryPoll() --> pipelinesObserver,
+    cls("pipelines"),
+    h2(
+      cls("pipelines__heading"),
+      "pipelines"
+    ),
+    // todo: use split operator, extract service to param
+    child <-- pipelines$.map {
+      case Remote.Initial    => span("not started")
+      case Remote.Pending    => span("loading")
+      case Remote.Failure(_) => span("error")
+      case Remote.Success(pipelines) =>
+        ul(
+          cls("pipelines__list"),
+          pipelines.map(Pipeline)
+        )
+    }
+  )
 
 private lazy val Pipeline = (pipeline: PipelineSummaryModel) =>
   import pipeline.{latestExecution, name}
