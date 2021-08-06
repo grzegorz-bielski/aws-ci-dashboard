@@ -12,8 +12,6 @@ import com.awscidashboard.app.Remote
 import com.awscidashboard.app.HttpService
 import com.awscidashboard.app.LaminarOps.{given, *}
 
-// given Owner = unsafeWindowOwner
-
 def Pipelines(using pipelineService: PipelineService) =
   lazy val v = Var(Remote.Initial.asInstanceOf[Remote[Vector[PipelineSummaryModel]]])
   lazy val pipelines$ = v.signal
@@ -23,13 +21,13 @@ def Pipelines(using pipelineService: PipelineService) =
   }
 
   div(
-    pipelineService.pipelineSummaryPoll() --> pipelinesObserver,
     cls("pipelines"),
     h2(
       cls("pipelines__heading"),
       "pipelines"
     ),
-    // todo: use split operator, extract service to param
+    pipelineService.pipelineSummaryPoll() --> pipelinesObserver,
+    // todo: use split operator
     child <-- pipelines$.map {
       case Remote.Initial    => span("not started")
       case Remote.Pending    => span("loading")

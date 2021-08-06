@@ -17,6 +17,7 @@ import com.awscidashboard.models.CodePipelineModels.*
 trait CodePipelineService:
   def getPipelinesSummaries(): IO[AwsError, Vector[PipelineSummaryModel]]
   def getPipelineDetails(pipelineName: String): IO[AwsError, PipelineDetailsModel]
+  def retryExecution(pipelineName: String, stageName: String, pipelineExecutionId: String): IO[AwsError, Unit]
 
 object CodePipelineService:
   def getPipelinesSummaries(): ZIO[Has[CodePipelineService], AwsError, Vector[PipelineSummaryModel]] =
@@ -25,8 +26,27 @@ object CodePipelineService:
   def getPipelineDetails(pipelineName: String): ZIO[Has[CodePipelineService], AwsError, PipelineDetailsModel] =
     ZIO.serviceWith(_.getPipelineDetails(pipelineName))
 
+  def retryExecution(
+      pipelineName: String,
+      stageName: String,
+      pipelineExecutionId: String
+  ): ZIO[Has[CodePipelineService], AwsError, Unit] =
+    ZIO.serviceWith(_.retryExecution(pipelineName, stageName, pipelineExecutionId))
+
 final class CodePipelineServiceImpl(console: Console.Service, codepipeline: CodePipeline.Service)
     extends CodePipelineService:
+
+  def retryExecution(pipelineName: String, stageName: String, pipelineExecutionId: String) =
+    codepipeline
+      .retryStageExecution(
+        RetryStageExecutionRequest(
+          pipelineName,
+          stageName,
+          pipelineExecutionId,
+          StageRetryMode.FAILED_ACTIONS
+        )
+      )
+      .map(_ => ())
 
   def getPipelinesSummaries(): IO[AwsError, Vector[PipelineSummaryModel]] =
     getPipelines().flatMap { p =>
@@ -35,7 +55,7 @@ final class CodePipelineServiceImpl(console: Console.Service, codepipeline: Code
       )
     }
 
-  def getPipelineDetails(pipelineName: String): IO[AwsError, PipelineDetailsModel] = 
+  def getPipelineDetails(pipelineName: String): IO[AwsError, PipelineDetailsModel] =
     for
       state <- getPipelineState(pipelineName)
       latestExecution <- getLatestPipelineExecution(pipelineName)
@@ -76,12 +96,11 @@ final class CodePipelineServiceImpl(console: Console.Service, codepipeline: Code
             .getOrElse(Vector.empty)
         )
       }
-
     yield PipelineDetailsModel(
       name = pipelineName,
       version = state.pipelineVersion,
       created = state.created,
-      updated = state.updated, 
+      updated = state.updated,
       latestExecution = latestExecution,
       stages = stagesModels
     )
@@ -106,7 +125,6 @@ final class CodePipelineServiceImpl(console: Console.Service, codepipeline: Code
           .map(_ => r)
           .mapError(AwsError.fromThrowable(_))
       }
-      
 
   private def getPipelineState(name: String) =
     codepipeline
@@ -159,6 +177,3 @@ final class CodePipelineServiceImpl(console: Console.Service, codepipeline: Code
 object CodePipelineServiceImpl:
   lazy val layer: URLayer[Has[Console.Service] with Has[CodePipeline.Service], Has[CodePipelineService]] =
     (CodePipelineServiceImpl(_, _)).toLayer
-
-// extension [R, E, T](op: Option[ZIO[R, E, Option[T]]])
-//   def toZIO: ZIO[R, E, Option[T]] = op.getOrElse(ZIO.succeed(Option.empty[T]))
