@@ -12,7 +12,7 @@ import io.circe.Decoder
 import io.circe.parser.parse
 import cats.syntax.functorFilter.given
 
-import com.awscidashboard.models.CodePipelineModels.*
+import com.awscidashboard.models.PipelineModels.*
 
 trait ExecutionsService:
   def getLatestPipelineExecution(pipelineName: String): IO[AwsError, Option[PipelineExecutionModel]]

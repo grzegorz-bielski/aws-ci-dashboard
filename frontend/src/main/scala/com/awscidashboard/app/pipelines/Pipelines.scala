@@ -6,7 +6,7 @@ import scala.scalajs.js.annotation.*
 
 import com.raquo.laminar.api.L.{given, *}
 
-import com.awscidashboard.models.CodePipelineModels.*
+import com.awscidashboard.models.PipelineModels.*
 
 import com.awscidashboard.app.Remote
 import com.awscidashboard.app.HttpService

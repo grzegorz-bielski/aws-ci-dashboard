@@ -3,13 +3,22 @@ package com.awscidashboard.app.pipelines
 import com.raquo.laminar.api.L.*
 
 import com.awscidashboard.app.HttpService
-import com.awscidashboard.models.CodePipelineModels.*
+import com.awscidashboard.models.PipelineModels.*
 import com.awscidashboard.app.Remote
 
 // transforming polls to Signals so same results won't cause re-renders
 // rel: https://github.com/raquo/Airstream/issues/19
 trait PipelineService:
   lazy val httpService: HttpService
+
+  def retryPipelineExecution(pipelineName: String, stageName: String, pipelineExecutionId: String) =
+    httpService.POST(
+      s"api/pipelines/$pipelineName/retry",
+      PipelineExecutionRetryModel(
+        stageName,
+        pipelineExecutionId
+      )
+    )
 
   def pipelineSummaryPoll(): Signal[Remote[Vector[PipelineSummaryModel]]] =
     poll(httpService.GET[Vector[PipelineSummaryModel]]("/api/pipelines"))

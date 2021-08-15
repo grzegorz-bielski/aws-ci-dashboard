@@ -6,7 +6,7 @@ import scala.scalajs.js.annotation.*
 
 import com.raquo.laminar.api.L.{given, *}
 
-import com.awscidashboard.models.CodePipelineModels.*
+import com.awscidashboard.models.PipelineModels.*
 
 import com.awscidashboard.app.Remote
 import com.awscidashboard.app.HttpService
@@ -25,6 +25,7 @@ def PipelineDetails(pipelineName: String)(using pipelineService: PipelineService
       Pills(pipeline$)
     ),
 
+    // todo: use split operator
     child <-- pipeline$
       .map {
         case Remote.Initial    => div("nothing yet")
@@ -35,15 +36,21 @@ def PipelineDetails(pipelineName: String)(using pipelineService: PipelineService
       }
   )
 
-private def Pills(pipeline$ : Signal[Remote[PipelineDetailsModel]]) =
+private def Pills(pipeline$ : Signal[Remote[PipelineDetailsModel]])(using pipelineService: PipelineService) =
+  val click$ = EventBus[Unit]()
+
   div(
     cls("field", "is-grouped"),
+
     child <-- pipeline$.map {
       case Remote.Success(pipeline) =>
         div(
           cls("control"),
           pipeline.latestExecution.map(_.status).map { status =>
             div(
+              // onClick.mapTo(()) --> click$,
+              // click$ <-- click$.flatMap(_ => pipelineService.retryPipelineExecution(pipeline.name, ))
+
               cls("tags", "has-addons"),
               span(
                 cls(

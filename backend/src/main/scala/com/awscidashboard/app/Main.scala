@@ -28,10 +28,11 @@ object Main extends App:
   lazy val app = pipelinesController +++ staticsController
 
   lazy val appLayer =
+    // this is a mess ... waiting for ZIO 2 inject
     val runtimeLayer = ZEnv.live
     val awsLayer = httpClient >>> awsConfig >>> codepipeline.live
     val sharedLayer = runtimeLayer ++ awsLayer
 
     val execLayer = sharedLayer >>> ExecutionsServiceImpl.layer
 
-    (sharedLayer ++ execLayer) >>> CodePipelineServiceImpl.layer
+    ((sharedLayer ++ execLayer) >>> CodePipelineServiceImpl.layer) ++ execLayer

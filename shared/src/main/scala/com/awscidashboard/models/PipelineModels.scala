@@ -4,7 +4,7 @@ import io.circe.{Codec, Decoder, Encoder, Json, HCursor}
 import io.circe.syntax.given
 import java.time.Instant
 
-object CodePipelineModels:
+object PipelineModels:
   type PipelineExecStatus = "Cancelled" | "InProgress" | "Stopped" | "Stopping" | "Succeeded" | "Superseded" |
     "Failed" | "UNKNOWN_TO_SDK_VERSION"
 
@@ -89,3 +89,8 @@ object CodePipelineModels:
       Decoder.decodeString.map(_.asInstanceOf[T]),
       Encoder(a => Json.fromString(a.asInstanceOf[String]))
     )
+
+  case class PipelineExecutionRetryModel(
+      stageName: String,
+      pipelineExecutionId: String
+  ) derives Codec.AsObject
