@@ -43,6 +43,7 @@ object CodePipelineModels:
     name: Option[String],
     entityUrl: Option[String],
     revisionUrl: Option[String],
+    runOrder: Option[Int],
     latestExecution: Option[PipelineStageActionExecutionModel]
   ) derives Codec.AsObject
 

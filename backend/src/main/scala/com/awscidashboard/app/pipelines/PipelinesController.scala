@@ -1,4 +1,4 @@
-package com.awscidashboard.app
+package com.awscidashboard.app.pipelines
 
 import zio.*
 import zhttp.http.*
@@ -6,7 +6,6 @@ import io.circe.syntax.given
 
 // todo: make the error responses saner
 lazy val pipelinesController = 
-
  HttpApp
     .collectM {
       case Method.GET -> Root / "api" / "pipelines" =>

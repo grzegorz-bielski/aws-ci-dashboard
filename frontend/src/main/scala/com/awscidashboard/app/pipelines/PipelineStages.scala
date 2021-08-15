@@ -36,7 +36,7 @@ def PipelineStages(pipeline: PipelineDetailsModel) =
   )
 
 private def FullStage(stage: PipelineStageModel) =
-  println(("full stage", stage))
+  // println(("full stage", stage))
 
   li(
     cls("pipeline-stages__stage", "pipeline-stages--full-stage"),
@@ -50,6 +50,7 @@ private def FullStage(stage: PipelineStageModel) =
     ol(
       cls("pipeline-stages__stage-actions"),
       stage.actions.map { action =>
+        println((action.name, action.runOrder))
         li(
           cls("pipeline-stages__stage-action", "message"),
           cls :?= getActionStatus(action),

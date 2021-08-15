@@ -11,6 +11,9 @@ import io.github.vigoo.zioaws.codepipeline
 import io.circe.syntax.given
 import java.nio.file.FileSystems
 
+import com.awscidashboard.app.statics.*
+import com.awscidashboard.app.pipelines.*
+
 object Main extends App:
   val port = 8090
   
@@ -27,5 +30,8 @@ object Main extends App:
   lazy val appLayer =
     val runtimeLayer = ZEnv.live
     val awsLayer = httpClient >>> awsConfig >>> codepipeline.live
+    val sharedLayer = runtimeLayer ++ awsLayer
 
-    (runtimeLayer ++ awsLayer) >>> CodePipelineServiceImpl.layer
+    val execLayer = sharedLayer >>> ExecutionsServiceImpl.layer
+
+    (sharedLayer ++ execLayer) >>> CodePipelineServiceImpl.layer

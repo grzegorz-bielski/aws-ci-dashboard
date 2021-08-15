@@ -1,9 +1,11 @@
-package com.awscidashboard.app
+package com.awscidashboard.app.statics
 
 import zio.*
 import zio.stream.*
 import zhttp.http.*
 import java.nio.file.FileSystems
+
+import com.awscidashboard.app.{*, given}
 
 lazy val staticsController = HttpApp
   .collect {
