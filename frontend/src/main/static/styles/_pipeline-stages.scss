@@ -4,6 +4,10 @@
 
   &__stage {
     list-style-type: none;
+
+    &.message {
+      margin-bottom: 1rem;
+    }
   }
 
   &__full-stage-name {
@@ -11,10 +15,14 @@
   }
 
   &--full-stage {
-    margin-bottom: 1.5rem;
+    margin-bottom: 1rem;
 
     .pipeline-stages__stage-action {
       margin-bottom: 1rem;
+    }
+
+    .pipeline-stages__stage-action-grouped {
+      margin-top: 0.5rem;
     }
   }
 
@@ -24,5 +32,9 @@
 
   &__stage-action {
     margin-left: 1rem;
+  }
+
+  &__disabled {
+    opacity: 0.4;
   }
 }

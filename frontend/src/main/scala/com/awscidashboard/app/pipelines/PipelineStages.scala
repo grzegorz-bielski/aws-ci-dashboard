@@ -19,47 +19,76 @@ def PipelineStages(pipeline: PipelineDetailsModel) =
   ol(
     cls("pipeline-stages"),
     pipeline.stages.zipWithIndex.map { (stage, i) =>
-      if stage.actions.size == 1 then 
+      if stage.actions.size == 1 then
         CollapsedStage(
           stage,
-            if i == 0 
-            then
-              a(
-                revisionDetails,
-                href := stage.actions.head.revisionUrl.mkString
-              )
-            else None
-          
+          if i == 0 then
+            a(
+              revisionDetails,
+              href := stage.actions.head.revisionUrl.mkString
+            )
+          else None
         )
       else FullStage(stage)
     }
   )
 
 private def FullStage(stage: PipelineStageModel) =
-  // println(("full stage", stage))
+  val actionsMap = stage.actions
+    .groupBy(_.runOrder.getOrElse(1))
+
+  val hasMultipleGroups = actionsMap.size > 1
+
+  val stages =
+    if hasMultipleGroups then
+      ol(
+        cls("pipeline-stages__stage-actions"),
+        actionsMap.map { (i, actions) =>
+          li(
+            span(
+              cls("has-text-weight-semibold"),
+              s"${stage.name.mkString} ${i}"
+            ),
+            ul(
+              actions.map { action =>
+                li(
+                  cls("pipeline-stages__stage-action", "pipeline-stages__stage-action-grouped", "message"),
+                  cls :?= getActionStatus(action),
+                  cls :?!= (action.latestExecution, "pipeline-stages__disabled"),
+                  StageAction(action)
+                )
+              }
+            )
+          )
+        }.toVector
+      )
+    else
+      ol(
+        cls("pipeline-stages__stage-actions"),
+        actionsMap.map { (_, actions) =>
+          actions.map { action =>
+            li(
+              cls("pipeline-stages__stage-action", "message"),
+              cls :?= getActionStatus(action),
+              cls :?!= (action.latestExecution, "pipeline-stages__disabled"),
+              StageAction(action)
+            )
+          }
+        }.toVector
+      )
 
   li(
     cls("pipeline-stages__stage", "pipeline-stages--full-stage"),
     header(
       cls("pipeline-stages__full-stage-name"),
-           span(
-      cls("has-text-weight-semibold"),
-      stage.name.mkString
-    )
-    ),
-    ol(
-      cls("pipeline-stages__stage-actions"),
-      stage.actions.map { action =>
-        println((action.name, action.runOrder))
-        li(
-          cls("pipeline-stages__stage-action", "message"),
-          cls :?= getActionStatus(action),
-          StageAction(
-              action
-            )
+      if hasMultipleGroups then None
+      else
+        span(
+          cls("has-text-weight-semibold"),
+          stage.name
         )
-      }
-    )
+    ),
+    stages
   )
 
 private def CollapsedStage(stage: PipelineStageModel, actionSlots: Mod[HtmlElement]*) =
@@ -68,6 +97,7 @@ private def CollapsedStage(stage: PipelineStageModel, actionSlots: Mod[HtmlEleme
   li(
     cls("pipeline-stages__stage", "message"),
     cls :?= firstAction.flatMap(getActionStatus),
+    cls :?!= (firstAction.flatMap(_.latestExecution), "pipeline-stages__disabled"),
     firstAction.map { action =>
       StageAction(
         action,
@@ -114,8 +144,8 @@ private def StatusHeader(name: Option[String], lastStatusChange: Option[Instant]
   )
 
 private def getActionStatus(action: PipelineStageActionModel) =
-    action.latestExecution.flatMap(_.status).collect {
-      case "Succeeded"  => "is-success"
-      case "Failed"     => "is-danger"
-      case "InProgress" => "is-info"
-    }
+  action.latestExecution.flatMap(_.status).collect {
+    case "Succeeded"  => "is-success"
+    case "Failed"     => "is-danger"
+    case "InProgress" => "is-info"
+  }
