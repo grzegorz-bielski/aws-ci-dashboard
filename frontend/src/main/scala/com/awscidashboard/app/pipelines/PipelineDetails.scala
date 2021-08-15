@@ -13,14 +13,7 @@ import com.awscidashboard.app.HttpService
 import com.awscidashboard.app.LaminarOps.{given, *}
 
 def PipelineDetails(pipelineName: String)(using pipelineService: PipelineService) =
-  // it might be worth extracting it to higher order component
-  // (can't be in service since we need an Owner instance provided by Laminar, unless we want to implement it :sweat)
-  lazy val v = Var(Remote.Initial.asInstanceOf[Remote[PipelineDetailsModel]])
-  lazy val pipeline$ = v.signal
-  lazy val pipelineObserver = v.updater[Remote[PipelineDetailsModel]] {
-    case (Remote.Success(a), Remote.Pending) => Remote.Success(a)
-    case (_, next)                           => next 
-  }
+  val pipeline$ = pipelineService.pipelineDetailsPoll(pipelineName)
 
   div(
     header(
@@ -32,14 +25,14 @@ def PipelineDetails(pipelineName: String)(using pipelineService: PipelineService
       Pills(pipeline$)
     ),
 
-    pipelineService.pipelineDetailsPoll(pipelineName) --> pipelineObserver,
-    child <-- pipeline$.map {
-      case Remote.Initial    => div("nothing yet")
-      case Remote.Pending    => div("loading")
-      case Remote.Failure(e) => div(s"error: ${e.toString}")
-      case Remote.Success(pipeline) =>
-       PipelineStages(pipeline)
-    }
+    child <-- pipeline$
+      .map {
+        case Remote.Initial    => div("nothing yet")
+        case Remote.Pending    => div("loading")
+        case Remote.Failure(e) => div(s"error: ${e.toString}")
+        case Remote.Success(pipeline) =>
+          PipelineStages(pipeline)
+      }
   )
 
 private def Pills(pipeline$ : Signal[Remote[PipelineDetailsModel]]) =

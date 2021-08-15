@@ -13,12 +13,7 @@ import com.awscidashboard.app.HttpService
 import com.awscidashboard.app.LaminarOps.{given, *}
 
 def Pipelines(using pipelineService: PipelineService) =
-  lazy val v = Var(Remote.Initial.asInstanceOf[Remote[Vector[PipelineSummaryModel]]])
-  lazy val pipelines$ = v.signal
-  lazy val pipelinesObserver = v.updater[Remote[Vector[PipelineSummaryModel]]] {
-    case (Remote.Success(a), Remote.Pending) => Remote.Success(a)
-    case (_, next)                           => next
-  }
+  val pipelines$ = pipelineService.pipelineSummaryPoll()
 
   div(
     cls("pipelines"),
@@ -26,7 +21,6 @@ def Pipelines(using pipelineService: PipelineService) =
       cls("pipelines__heading"),
       "pipelines"
     ),
-    pipelineService.pipelineSummaryPoll() --> pipelinesObserver,
     // todo: use split operator
     child <-- pipelines$.map {
       case Remote.Initial    => span("not started")

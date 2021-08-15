@@ -58,6 +58,7 @@ final class CodePipelineServiceImpl(console: Console.Service, codepipeline: Code
   def getPipelineDetails(pipelineName: String): IO[AwsError, PipelineDetailsModel] =
     for
       state <- getPipelineState(pipelineName)
+      // _ <- console.putStrLn(state.toString).mapError(AwsError.fromThrowable(_))
       latestExecution <- getLatestPipelineExecution(pipelineName)
       stages = state.stageStates.map(_.toVector) getOrElse Vector.empty
       stagesModels = stages.map { s =>
@@ -96,6 +97,7 @@ final class CodePipelineServiceImpl(console: Console.Service, codepipeline: Code
             .getOrElse(Vector.empty)
         )
       }
+      
     yield PipelineDetailsModel(
       name = pipelineName,
       version = state.pipelineVersion,
@@ -150,7 +152,6 @@ final class CodePipelineServiceImpl(console: Console.Service, codepipeline: Code
       .map(_.editable.pipelineExecution)
       .map {
         _.flatMap { exec =>
-          println(exec)
           // todo: use par tuple from cats
           for
             id <- exec.pipelineExecutionId

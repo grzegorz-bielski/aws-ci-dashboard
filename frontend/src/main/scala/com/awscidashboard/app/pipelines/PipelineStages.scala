@@ -36,6 +36,8 @@ def PipelineStages(pipeline: PipelineDetailsModel) =
   )
 
 private def FullStage(stage: PipelineStageModel) =
+  println(("full stage", stage))
+
   li(
     cls("pipeline-stages__stage", "pipeline-stages--full-stage"),
     header(
