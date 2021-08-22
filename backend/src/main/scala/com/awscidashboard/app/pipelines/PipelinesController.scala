@@ -36,7 +36,11 @@ lazy val pipelinesController =
                 form.pipelineExecutionId
               )
               .map(_ => Response.ok)
-              .orElseSucceed(Response.status(Status.INTERNAL_SERVER_ERROR))
+              .catchAll {
+                case e => 
+                  println(("error", e)) // todo: use zio logging lib
+                  ZIO.succeed(Response.status(Status.INTERNAL_SERVER_ERROR))
+              }
 
       case Method.GET -> Root / "api" =>
         ZIO.succeed(Response.status(Status.NOT_FOUND))

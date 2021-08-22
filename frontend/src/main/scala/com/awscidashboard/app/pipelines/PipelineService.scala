@@ -6,30 +6,31 @@ import com.awscidashboard.app.HttpService
 import com.awscidashboard.models.PipelineModels.*
 import com.awscidashboard.app.Remote
 
-// transforming polls to Signals so same results won't cause re-renders
-// rel: https://github.com/raquo/Airstream/issues/19
 trait PipelineService:
   lazy val httpService: HttpService
 
   def retryPipelineExecution(pipelineName: String, stageName: String, pipelineExecutionId: String) =
     httpService.POST(
-      s"api/pipelines/$pipelineName/retry",
+      s"/api/pipelines/$pipelineName/retry",
       PipelineExecutionRetryModel(
         stageName,
         pipelineExecutionId
       )
     )
 
-  def pipelineSummaryPoll(): Signal[Remote[Vector[PipelineSummaryModel]]] =
-    poll(httpService.GET[Vector[PipelineSummaryModel]]("/api/pipelines"))
-      .startWith(Remote.Pending)
 
-  def pipelineDetailsPoll(pipelineName: String): Signal[Remote[PipelineDetailsModel]] =
-    poll(httpService.GET[PipelineDetailsModel](s"/api/pipelines/$pipelineName"))
-      .startWith(Remote.Pending)
+  def pipelineSummaryPoll(): EventStream[Remote[Vector[PipelineSummaryModel]]] =
+    poll(pipelineSummary())
+
+  def pipelineSummary() = httpService.GET[Vector[PipelineSummaryModel]]("/api/pipelines")
+
+  def pipelineDetails(pipelineName: String) = httpService.GET[PipelineDetailsModel](s"/api/pipelines/$pipelineName")
+
+  def pipelineDetailsPoll(pipelineName: String): EventStream[Remote[PipelineDetailsModel]] =
+    poll(pipelineDetails(pipelineName))
 
   private def poll[T](request: => EventStream[Remote[T]], delayTime: Int = 3000): EventStream[Remote[T]] =
-    // TODO: try making it tailrec
+    // todo: try making it tailrec
     request.flatMap {
       case res @ Remote.Success(_) =>
         val current = EventStream.fromValue(res)

@@ -13,7 +13,7 @@ import com.awscidashboard.app.HttpService
 import com.awscidashboard.app.LaminarOps.{given, *}
 
 def Pipelines(using pipelineService: PipelineService) =
-  val pipelines$ = pipelineService.pipelineSummaryPoll()
+  val pipelines$ = pipelineService.pipelineSummaryPoll().startWith(Remote.Pending)
 
   div(
     cls("pipelines"),

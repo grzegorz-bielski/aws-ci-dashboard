@@ -8,6 +8,12 @@
     font-weight: 500;
   }
 
+  &__pills {
+    &:hover {
+      cursor: pointer;
+    }
+  }
+
   *:first-child {
     margin-right: 1rem;
   }

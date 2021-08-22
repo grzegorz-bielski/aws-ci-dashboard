@@ -13,7 +13,11 @@ import com.awscidashboard.app.HttpService
 import com.awscidashboard.app.LaminarOps.{given, *}
 
 def PipelineDetails(pipelineName: String)(using pipelineService: PipelineService) =
-  val pipeline$ = pipelineService.pipelineDetailsPoll(pipelineName)
+  val retryBus = EventBus[Unit]()
+  val pipeline$ = EventStream.merge(
+    pipelineService.pipelineDetailsPoll(pipelineName),
+    retryBus.events.flatMap(_ => pipelineService.pipelineDetails(pipelineName))
+) .startWith(Remote.Pending)
 
   div(
     header(
@@ -22,7 +26,7 @@ def PipelineDetails(pipelineName: String)(using pipelineService: PipelineService
         cls("pipeline-details-header__heading"),
         pipelineName
       ),
-      Pills(pipeline$)
+      Pills(pipeline$, clickObserver = retryBus.writer)
     ),
 
     // todo: use split operator
@@ -36,21 +40,32 @@ def PipelineDetails(pipelineName: String)(using pipelineService: PipelineService
       }
   )
 
-private def Pills(pipeline$ : Signal[Remote[PipelineDetailsModel]])(using pipelineService: PipelineService) =
-  val click$ = EventBus[Unit]()
+private def Pills(pipeline$ : Signal[Remote[PipelineDetailsModel]], clickObserver: Observer[Unit])(using pipelineService: PipelineService) =
+  val clickBus = EventBus[Unit]()
+
+  def getLatestFailedStage(stages: Vector[PipelineStageModel], execId: String) =
+    stages.find { _.latestExecution.find(e => e.executionId == execId && e.status == "Failed").isDefined }
+
+  def retryPipelineExec(pipeline: PipelineDetailsModel) = 
+      for 
+        execId <- pipeline.latestExecution.map(_.id).toEventStream
+        stageName <- getLatestFailedStage(pipeline.stages, execId).flatMap(_.name).toEventStream
+        _ <- pipelineService.retryPipelineExecution(pipeline.name, stageName, execId)
+        // todo: refetch pipeline state
+      yield ()
+
 
   div(
-    cls("field", "is-grouped"),
-
+    cls("field", "is-grouped", "pipeline-details-header__pills"),
     child <-- pipeline$.map {
       case Remote.Success(pipeline) =>
         div(
           cls("control"),
           pipeline.latestExecution.map(_.status).map { status =>
             div(
-              // onClick.mapTo(()) --> click$,
-              // click$ <-- click$.flatMap(_ => pipelineService.retryPipelineExecution(pipeline.name, ))
-
+              onClick.mapTo(()) --> clickBus,
+              // todo: this should be really lifted to the PipelineDetails
+              clickBus.events.flatMap(_ => retryPipelineExec(pipeline)) --> clickObserver,
               cls("tags", "has-addons"),
               span(
                 cls(
@@ -63,11 +78,10 @@ private def Pills(pipeline$ : Signal[Remote[PipelineDetailsModel]])(using pipeli
                 ),
                 status
               ),
-
-              status match 
-                case "Failed" => 
+              status match
+                case "Failed" =>
                   span(cls("tag", "is-medium", "fas", "fa-sync-alt"))
-                case "InProgress" => 
+                case "InProgress" =>
                   span(cls("tag", "is-medium", "fas", "fa-pause"))
                 case _ => ""
             )
