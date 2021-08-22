@@ -7,3 +7,8 @@ import com.raquo.laminar.nodes.ReactiveElement
 object LaminarOps:
   extension [K, E <: ReactiveElement.Base](ck: CompositeKey[K, E])
     def :?=(value: Option[String]): Setter[E] = ck(value.toSeq*)
+    def :?!=[T](value: Option[T], onNone: => String): Setter[E] =
+        :?= (value.fold(Some(onNone))(_ => None))
+
+  extension [A](op: Option[A])
+    def toEventStream = EventStream.fromSeq(op.toSeq)

@@ -6,7 +6,7 @@ import io.frontroute.*
 
 import com.awscidashboard.app.pipelines.*
 
-object AppRouter:
+def AppRouter(using PipelineService) =
   lazy val (renders, route) = makeRoute[HtmlElement] { render =>
     concat(
       pathEnd {
@@ -21,13 +21,14 @@ object AppRouter:
     )
   }
 
-  def apply() =
-    runRoute(
-      route,
-      LocationProvider.browser(windowEvents.onPopState)
-    )(unsafeWindowOwner)
+  runRoute(
+    route,
+    LocationProvider.browser(windowEvents.onPopState)
+  )(unsafeWindowOwner)
 
-    BrowserNavigation.emitPopStateEvent()
-    LinkHandler.install()
+  BrowserNavigation.emitPopStateEvent()
+  LinkHandler.install()
 
-    renders.map(_.getOrElse(span("Loading...")))
+  renders.map(_.getOrElse(div()))
+  
+end AppRouter

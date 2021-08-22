@@ -6,35 +6,36 @@ import scala.scalajs.js.annotation.*
 
 import com.raquo.laminar.api.L.{given, *}
 
-import com.awscidashboard.models.CodePipelineModels.*
+import com.awscidashboard.models.PipelineModels.*
 
+import com.awscidashboard.app.Remote
 import com.awscidashboard.app.HttpService
 import com.awscidashboard.app.LaminarOps.{given, *}
 
-lazy val Pipelines = div(
-  cls("container", "is-fluid", "pipelines"),
-  h2(
-    cls("pipelines__header", "title"),
-    "Pipelines"
-  ),
-  // todo: use split operator, extract service to param
-  child <-- HttpService.GET[Vector[PipelineDetailsModel]]("/api/pipelines").map {
-    case None => span("Nothing yet")
-    case Some(pipelines) =>
-      ul(
-        cls("pipelines__list"),
-        pipelines.map(Pipeline)
-      )
-  }
-)
+def Pipelines(using pipelineService: PipelineService) =
+  val pipelines$ = pipelineService.pipelineSummaryPoll().startWith(Remote.Pending)
 
-lazy val PipelineDetails = (id: String) =>
   div(
-    s"Some page: $id"
+    cls("pipelines"),
+    h2(
+      cls("pipelines__heading"),
+      "pipelines"
+    ),
+    // todo: use split operator
+    child <-- pipelines$.map {
+      case Remote.Initial    => span("not started")
+      case Remote.Pending    => span("loading")
+      case Remote.Failure(_) => span("error")
+      case Remote.Success(pipelines) =>
+        ul(
+          cls("pipelines__list"),
+          pipelines.map(Pipeline)
+        )
+    }
   )
 
-private lazy val Pipeline = (pipeline: PipelineDetailsModel) =>
-  import pipeline.{latestExecution, version, name}
+private lazy val Pipeline = (pipeline: PipelineSummaryModel) =>
+  import pipeline.{latestExecution, name}
 
   li(
     a(
@@ -50,7 +51,7 @@ private lazy val Pipeline = (pipeline: PipelineDetailsModel) =>
           cls("message-header"),
           h3(
             cls("has-text-weight-bold", "is-size-6"),
-            name ++ version.map(v => s" #$v").mkString
+            name
           ),
           span(
             latestExecution.map(_.status).mkString
@@ -58,9 +59,6 @@ private lazy val Pipeline = (pipeline: PipelineDetailsModel) =>
         ),
         div(
           cls("message-body", "pipeline__body"),
-          // pipeline.version.map(_.toString).getOrElse(""),
-          // pipeline.created.map(_.toString).getOrElse(""),
-          // pipeline.updated.map(_.toString).getOrElse(""),
           code(
             latestExecution
               .map(_.latestRevision)

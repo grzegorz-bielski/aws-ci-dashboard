@@ -11,59 +11,28 @@ import io.github.vigoo.zioaws.codepipeline
 import io.circe.syntax.given
 import java.nio.file.FileSystems
 
-object Main extends App:
-  override def run(_args: List[String]) =
-    val port = 8090
+import com.awscidashboard.app.statics.*
+import com.awscidashboard.app.pipelines.*
 
+object Main extends App:
+  val port = 8090
+  
+  override def run(_args: List[String]) =
     println(s"Starting app at $port port")
 
     Server
-      .start(port, app +++ staticApp)
+      .start(port, app)
       .provideCustomLayer(appLayer)
       .exitCode
 
+  lazy val app = pipelinesController +++ staticsController
+
   lazy val appLayer =
+    // this is a mess ... waiting for ZIO 2 inject
     val runtimeLayer = ZEnv.live
     val awsLayer = httpClient >>> awsConfig >>> codepipeline.live
+    val sharedLayer = runtimeLayer ++ awsLayer
 
-    (runtimeLayer ++ awsLayer) >>> CodePipelineServiceImpl.layer
+    val execLayer = sharedLayer >>> ExecutionsServiceImpl.layer
 
-  private def fileAt(path: String) =
-    FileSystems.getDefault.getPath(path).normalize.toAbsolutePath
-
-  private def resourceAt(path: String) =
-    HttpData.fromStream(ZStream.fromFile(fileAt(path)))
-
-  lazy val staticApp = HttpApp
-    .collect {
-      case Method.GET -> Root / "scripts" / script =>
-        Response.http(
-          content = resourceAt(s"./build/scripts/$script"),
-          headers = List(
-            Header.custom("content-type", "application/javascript")
-          )
-        )
-
-      case Method.GET -> Root / "styles" / styleSheet =>
-        Response.http(
-          content = resourceAt(s"./build/styles/$styleSheet"),
-          headers = List(
-            Header.custom("content-type", "text/css")
-          )
-        )
-
-      case _ =>
-        Response.http(content = resourceAt("./build/index.html"))
-    }
-
-  lazy val app = HttpApp
-    .collectM {
-      case Method.GET -> Root / "api" / "pipelines" =>
-        CodePipelineService
-          .getPipelinesDetails()
-          .map(p => Response.jsonString(p.asJson.toString))
-          .orElseSucceed(Response.jsonString("""{"error": "500"}"""))
-
-       case Method.GET -> Root / "api" => 
-        ZIO.succeed(Response.jsonString("""{"error": "404"}"""))
-    }
+    ((sharedLayer ++ execLayer) >>> CodePipelineServiceImpl.layer) ++ execLayer

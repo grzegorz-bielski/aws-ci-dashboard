@@ -1,0 +1,41 @@
+.pipeline-stages {
+  margin-top: 1rem;
+  max-width: 40rem;
+
+  &__stage {
+    list-style-type: none;
+
+    &.message {
+      margin-bottom: 1rem;
+    }
+  }
+
+  &__full-stage-name {
+    margin-bottom: 1rem;
+  }
+
+  &--full-stage {
+    margin-bottom: 1rem;
+
+    .pipeline-stages__stage-action {
+      margin-bottom: 1rem;
+    }
+
+    .pipeline-stages__stage-action-grouped {
+      margin-top: 0.5rem;
+    }
+  }
+
+  &__stage-actions {
+    list-style-type: none;
+  }
+
+  &__stage-action {
+    margin-left: 1rem;
+  }
+
+  &__disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
+}
