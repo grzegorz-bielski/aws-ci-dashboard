@@ -22,5 +22,5 @@ Open three terminal windows with:
 ```
  sbt "~frontend/fullLinkJS"
  npm run snowpack -- build
- snt "backend/run"
+ sbt "backend/run"
 ```

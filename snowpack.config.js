@@ -6,6 +6,10 @@ const developmentMode = process.env.NODE_ENV === 'development'
 
 /** @type {import('snowpack').SnowpackUserConfig } */
 export default {
+  buildOptions: {
+    out: "backend/src/main/resources/public"
+  },
+
   mount: {
     'frontend/src/main/static/': '/',
     [`frontend/target/scala-${scalaVersion}/frontend-${developmentMode ? "fastopt" : "opt"}`]: '/scripts'

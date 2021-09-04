@@ -31,3 +31,5 @@ project/plugins/project/
 node_modules
 .DS_Store
 build
+*.env
+backend/src/main/resources/public/*
