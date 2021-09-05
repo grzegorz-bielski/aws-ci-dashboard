@@ -1,5 +1,6 @@
 import org.scalajs.jsenv.jsdomnodejs.JSDOMNodeJSEnv
 import scala.sys.process._
+import NativePackagerHelper._
 
 val zioAwsVersion = "3.16.79.3"
 val circeVersion = "0.14.1"
@@ -87,9 +88,10 @@ lazy val backend = project
     dockerExposedPorts ++= Seq(
       scala.sys.env("APP_PORT").toInt
     ),
+    Universal / mappings ++= directory("backend/src/main/resources/public"),
 
     build := {
-      publishLocal.value
+      (Docker / stage).value
     }
   )
   .dependsOn(shared.jvm)

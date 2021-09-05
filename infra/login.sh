@@ -1,3 +1,3 @@
 #!/usr/bin/env bash
-
-aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin 876580015220.dkr.ecr.us-east-1.amazonaws.com
+ACCOUNT=$1
+aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin "$ACCOUNT".dkr.ecr.us-east-1.amazonaws.com
