@@ -1,0 +1,3 @@
+name: ci-dashboard
+runtime: nodejs
+description: aws ci dashboard for CodePipeline and friends
