@@ -7,4 +7,4 @@ then
   export $(cat .env | grep -v '#' | sed 's/\r$//' | awk '/=/ {print $1}' )
 fi
 
-sbt
+sbt $1
